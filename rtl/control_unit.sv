@@ -5,13 +5,13 @@ module control_unit(
     input logic funct7_5,
     output logic [REG_ADDR_WIDTH:0]reg_write,
     output logic pc_src,
-    output llogic [1:0]imm_src,
+    output logic [1:0]imm_src,
     output logic ALU_control,
     output logic ALU_src
 );
     logic branch;
     logic [1:0] ALU_op;
-    
+
     main_decoder main_decoder(
         .ALU_op(ALU_op),
         .ALU_src(ALU_src),
