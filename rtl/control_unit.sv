@@ -6,7 +6,7 @@ module control_unit (
     output logic [REG_ADDR_WIDTH:0] reg_write,
     output logic                    pc_src,
     output logic [             1:0] imm_src,
-    output logic                    ALU_control,
+    output logic                   [2:0] ALU_control,
     output logic                    ALU_src
 );
   logic branch;
