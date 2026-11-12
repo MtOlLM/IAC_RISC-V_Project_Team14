@@ -1,13 +1,13 @@
 module control_unit (
-    input  logic                    eq,
-    input  logic [             6:0] opcode,
-    input  logic [           14:12] funct3,
-    input  logic                    funct7_5,
-    output logic [REG_ADDR_WIDTH:0] reg_write,
-    output logic                    pc_src,
-    output logic [             1:0] imm_src,
-    output logic                   [2:0] ALU_control,
-    output logic                    ALU_src
+    input  logic         eq,
+    input  logic [  6:0] opcode,
+    input  logic [14:12] funct3,
+    input  logic         funct7_5,
+    output logic         reg_write,
+    output logic         pc_src,
+    output logic [  1:0] imm_src,
+    output logic [  2:0] ALU_control,
+    output logic         ALU_src
 );
   logic branch;
   logic [1:0] ALU_op;
