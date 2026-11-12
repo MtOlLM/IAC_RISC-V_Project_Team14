@@ -1,10 +1,10 @@
 module program_counter #(
-    parameter logic [31:0] reset_pc = 32'h00000000
+    parameter logic [31:0] RESET_PC = 32'h0000_0000
 ) (
     input  logic clk,
     input  logic rst,
-    input  logic pcsrc,
-    input  logic [31:0] immop,
+    input  logic pc_src,
+    input  logic [31:0] imm_op,
     output logic [31:0] pc
 );
     logic [31:0] inc_pc;
@@ -12,12 +12,12 @@ module program_counter #(
     logic [31:0] next_pc;
 
     assign inc_pc = pc + 32'd4;
-    assign branch_pc = pc + immop;
-    assign next_pc = pcsrc ? branch_pc : inc_pc;
+    assign branch_pc = pc + imm_op;
+    assign next_pc = pc_src ? branch_pc : inc_pc;
 
     always_ff @(posedge clk) begin
         if (rst)
-            pc <= reset_pc;
+            pc <= RESET_PC;
         else
             pc <= next_pc;
     end

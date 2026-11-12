@@ -1,5 +1,5 @@
 module top #(
-    DATA_WIDTH = 32
+    parameter DATA_WIDTH = 32
 ) (
     input  logic                    clk,
     input  logic                    rst,
@@ -63,6 +63,14 @@ module top #(
       .ALUctrl(ALU_control),
       .ALUout(ALU_out),
       .eq(eq)
+  );
+
+  program_counter u_program_counter (
+      .clk   (clk),
+      .rst   (rst),
+      .pc_src(pc_src),
+      .imm_op(imm_op),
+      .pc    (pc)
   );
 
 endmodule
