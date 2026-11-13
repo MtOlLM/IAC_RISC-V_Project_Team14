@@ -11,6 +11,10 @@ module regfile #(
 
   logic [DATA_WIDTH-1:0] register_file[(2**ADDRESS_WIDTH)-1:0];
 
+  initial begin
+    for(int i = 0; i < (2**ADDRESS_WIDTH) ; i++) register_file[i] = 32'b0;
+  end
+  
   always_ff @(posedge clk) 
     if (WE3 && (AD3 != '0)) register_file[AD3] <= WD3;
 
