@@ -12,7 +12,7 @@ module regfile #(
   logic [DATA_WIDTH-1:0] register_file[(2**ADDRESS_WIDTH)-1:0];
 
   always_ff @(posedge clk) 
-    if (WE3 && (AD3 != '0)) register_file[AD3] <= WE3;
+    if (WE3 && (AD3 != '0)) register_file[AD3] <= WD3;
 
   always_comb begin
     RD1 = register_file[AD1];

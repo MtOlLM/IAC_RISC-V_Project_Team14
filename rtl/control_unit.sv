@@ -44,7 +44,7 @@ module main_decoder (
   always_comb begin
     reg_write = opcode[5] ^ opcode[4];
     branch = opcode[6];
-    ALU_op = {op[4], op[6]};
+    ALU_op = {opcode[4], opcode[6]};
     imm_src = {opcode[5] & opcode[6], opcode[5] & ~opcode[4] & ~opcode[6]};
     ALU_src = ~opcode[4] & ~opcode[6];
   end
@@ -60,10 +60,10 @@ module ALU_decoder (
   always_comb begin
     if (ALU_op[1]) ALU_control = {1'b0, ALU_op};
     case (funct3)
-      000: ALU_control = {2'b00, opcode[5] & funct7_5};
-      010: ALU_control = 3'b101;
-      110: ALU_control = 3'b011;
-      111: ALU_control = 3'b010;
+      3'b000: ALU_control = {2'b00, opcode[5] & funct7_5};
+      3'b010: ALU_control = 3'b101;
+      3'b110: ALU_control = 3'b011;
+      3'b111: ALU_control = 3'b010;
       default: ALU_control = 3'b000;
     endcase
   end

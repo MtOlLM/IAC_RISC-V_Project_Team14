@@ -9,13 +9,13 @@ module alu #(
 );
 
   always_comb
-    case (ctrl)
+    case (ALUctrl)
       3'b000:  ALUout = ALUOp1 + ALUOp2;
       3'b001:  ALUout = ALUOp1 - ALUOp2;
       3'b010:  ALUout = ALUOp1 & ALUOp2;
       3'b101:  ALUout = {{(DATA_WIDTH - 1) {1'b0}}, (ALUOp1 < ALUOp2)};
       3'b011:  ALUout = ALUOp1 | ALUOp2;
-      default: ALUout = b0;
+      default: ALUout = {(DATA_WIDTH) {1'b0}};
     endcase
 
   assign eq = (ALUOp1 == ALUOp2);
