@@ -45,7 +45,8 @@ for file in "${files[@]}"; do
                 -y ${RTL_FOLDER} \
                 --prefix "Vdut" \
                 -o Vdut \
-                -LDFLAGS "-lgtest -lgtest_main -lpthread" \
+                -CFLAGS "-I/opt/homebrew/include -std=c++17" \
+                -LDFLAGS "-L/opt/homebrew/lib -lgtest -lgtest_main -lpthread" \
 
     # Build C++ project with automatically generated Makefile
     make -j -C obj_dir/ -f Vdut.mk
