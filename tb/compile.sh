@@ -4,7 +4,7 @@
 
 # Default vars
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
-output_file="../rtl/program.hex"
+output_file="../tb/program.hex"
 
 # Handle terminal arguments
 if [[ $# -eq 0 ]]; then
@@ -52,7 +52,7 @@ riscv64-unknown-elf-objdump -f -d --source -m riscv \
                             a.out.reloc > ${SCRIPT_DIR}/${basename}.dis
 
 # Formats into a hex file
-od -v -An -t x1 "a.bin" | tr -s '\n' | awk '{$1=$1};1' > "${output_file}"
+od -v -An -t x4 "a.bin" | tr -s '\n' | awk '{$1=$1};1' > "${output_file}"
 
 rm "a.out.reloc"
 rm "a.out"
