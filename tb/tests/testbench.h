@@ -17,9 +17,7 @@ public:
             for (int clk = 0; clk < 2; clk++)
             {
                 top->eval();
-#ifndef __APPLE__
                 tfp->dump(2 * ticks + clk);
-#endif
                 top->clk = !top->clk;
             }
             ticks++;
