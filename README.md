@@ -1,2 +1,8 @@
 # IAC_RISC-V_Project_Team14
-ELEC50010 - Instruction Architectures and Compilers autumn term project.
+#### ELEC50010 - Instruction Architectures and Compilers autumn term project
+
+#### Team members: Martin, Rupert, Sonia, Xichao
+
+---
+
+Please include **ANY** AI usage in commit message.

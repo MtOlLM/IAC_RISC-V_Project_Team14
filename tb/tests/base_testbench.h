@@ -16,29 +16,27 @@ class BaseTestbench : public ::testing::Test
 public:
     void SetUp() override
     {
-        top = std::make_unique<Vdut>();
-#ifndef __APPLE__
+        contextp = std::make_unique<VerilatedContext>();
+        contextp->traceEverOn(true);
+        top = std::make_unique<Vdut>(contextp.get());
         tfp = std::make_unique<VerilatedVcdC>();
-        Verilated::traceEverOn(true);
         top->trace(tfp.get(), 99);
-        tfp->open("waveform.vcd");
-#endif
+        std::string name = std::string(
+            ::testing::UnitTest::GetInstance()->current_test_info()->name()) + ".vcd";
+        tfp->open(name.c_str());
         initializeInputs();
     }
 
     void TearDown() override
     {
         top->final();
-#ifndef __APPLE__
         tfp->close();
-#endif
     }
 
     virtual void initializeInputs() = 0;
 
 protected:
+    std::unique_ptr<VerilatedContext> contextp;
     std::unique_ptr<Vdut> top;
-#ifndef __APPLE__
     std::unique_ptr<VerilatedVcdC> tfp;
-#endif
 };
