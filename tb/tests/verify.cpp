@@ -20,6 +20,10 @@ TEST_F(CpuTestbench, BaseProgramTest)
     bool success = false;
     system("./compile.sh asm/program.S");
 
+    top->rst = 1;
+    runSimulation(2);
+    top->rst = 0;
+    
     for (int i = 0; i < CYCLES; i++)
     {
         runSimulation(1);
