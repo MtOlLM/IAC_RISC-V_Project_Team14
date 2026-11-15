@@ -5,4 +5,4 @@
 
 ---
 
-Please include **ANY** AI usage in commit message.
+Please specify **ANY** AI usage in your commit message by including the keyword ["AI"](./update_AI.sh).

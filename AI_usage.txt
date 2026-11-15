@@ -1,0 +1,23 @@
+Martin Oliver Li Ma | 15-11-2026 17:10:44
+verified sine wave generator
+AI Usage: Claude wrote the code for parsing the sine.mem file to a vector of uint8_t
+
+Martin Oliver Li Ma | 13-11-2026 23:29:12
+Remove all #ifndef __APPLE__ guards to generate the waveform
+AI Usage: Claude helped with understanding the code and naming the .vcd file with the name of the test
+
+Martin Oliver Li Ma | 13-11-2026 11:17:14
+include the googletest path to the verilator command
+AI usage: Claude helps parsing error message
+
+Martin Oliver Li Ma | 12-11-2026 19:43:03
+Add the pc to the top.sv
+AI usage: asked for a quick way to instantiate a module using Verilog: Instantiate Module
+
+Martin Oliver Li Ma | 12-11-2026 11:58:43
+add three modules to the top module
+AI usage: None
+
+Martin Oliver Li Ma | 12-11-2026 11:36:41
+Three modules added: ROM, control_unit, sign_ext
+AI usage: asked some syntax questions: multiple modules in one file, instance name restriction, etc.
