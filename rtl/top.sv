@@ -46,7 +46,7 @@ module top #(
         .AD3(instr[11:7]),
         .clk(clk),
         .WE3(reg_write),
-        .WD3(ALU_out),
+        .WD3(write_data),
         .RD1(src_a),
         .RD2(rd2_op),
         .a0 (a0)
@@ -80,12 +80,12 @@ module top #(
         .w_en    (mem_write),
         .data_in (rd2_op),
         .addr    (ALU_out),
-        .data_out(mem_write)
+        .data_out(mem_out)
     );
 
     mux regfile_write_src_mux (
         .in0(ALU_out),
-        .in1(mem_write),
+        .in1(mem_out),
         .sel(result_src),
         .out(write_data)
     );
