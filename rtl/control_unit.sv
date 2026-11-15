@@ -75,6 +75,7 @@ module main_decoder (
             OPTYPE_S: begin
                 imm_src = 2'b01;
                 ALU_src = 1'b1;
+                mem_write = 1'b1;
             end
             OPTYPE_B: begin
                 branch  = 1'b1;
@@ -84,7 +85,6 @@ module main_decoder (
             OPTYPE_I_L: begin
                 reg_write = 1'b1;
                 ALU_src = 1'b1;
-                mem_write = 1'b1;
                 result_src = 1'b1;
             end
             default: ;
