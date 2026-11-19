@@ -9,8 +9,8 @@ module sign_ext #(
         I_TYPE, //000
         S_TYPE, //001
         B_TYPE, //010
-        U_TYPE, //100
-        J_TYPE  //101
+        U_TYPE, //011
+        J_TYPE  //100
     } instr_type;
 
     always_comb
