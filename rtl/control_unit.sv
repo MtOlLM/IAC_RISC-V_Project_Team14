@@ -8,7 +8,7 @@ module control_unit (
     output logic [  2:0] imm_src,
     output logic [  3:0] ALU_control,
     output logic [  2:1] ALU_src,      //more intuitive, ALU_src[1] for op1 and ALU_src[2] for op2
-    output logic         mem_write,
+    output logic [  3:0] mem_write,
     output logic [  2:1] result_src
 );
     typedef enum logic [2:0] {
@@ -51,8 +51,8 @@ module control_unit (
         branch_jalr = FALSE;
         reg_write = FALSE;
         imm_src = I_IMM;
-        ALU_src = {FALSE, FALSE};
-        mem_write = FALSE;
+        ALU_src = {2{FALSE}};
+        mem_write = {4{FALSE}};
         result_src = ALU_OUT;
         pc_src[1] = FALSE;
 
@@ -67,8 +67,13 @@ module control_unit (
             OPTYPE_S: begin
                 imm_src     = S_IMM;
                 ALU_src[2]  = TRUE;
-                mem_write   = TRUE;
                 ALU_control = ADD;
+                case (funct3[13:12])
+                    2'b00:   w_en = 4'b0001;
+                    2'b01:   w_en = 4'b0011;
+                    2'b10:   w_en = 4'b1111;
+                    default: w_en = 4'b0000;
+                endcase
             end
             OPTYPE_B: begin
                 branch_jalr = TRUE;
