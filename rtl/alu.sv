@@ -38,6 +38,7 @@ module alu #(
 
     assign branch_ctrl = {
         ALUOp1 == ALUOp2,
+        1'b0, //a useless bit just to make the decode easier
         $signed(ALUOp1) < $signed(ALUOp2),
         ALUOp1 < ALUOp2
     };
