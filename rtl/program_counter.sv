@@ -6,9 +6,9 @@ module program_counter #(
     input  logic [31:0] rs1,
     input  logic [ 1:0] pc_src,
     input  logic [31:0] imm_op,
-    output logic [31:0] pc
+    output logic [31:0] pc,
+    output logic [31:0] inc_pc
 );
-    logic [31:0] inc_pc;
     logic [31:0] relative_pc;  //branch and jal
     logic [31:0] absolute_pc;  //jalr
     logic [31:0] next_pc;
