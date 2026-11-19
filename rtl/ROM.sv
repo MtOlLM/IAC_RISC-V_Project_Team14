@@ -1,5 +1,5 @@
 module ROM #(
-    parameter ADDR_WIDTH = 16 //65 kB of ROM
+    parameter ADDR_WIDTH = 12 //instruction memory with address from 0xBFC00000 to 0xBFC00FFF
 ) (
     input  logic [31 : 0] addr,
     output logic [31 : 0] data
