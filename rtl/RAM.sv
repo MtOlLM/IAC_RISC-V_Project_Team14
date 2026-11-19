@@ -1,5 +1,5 @@
 module RAM #(
-    parameter ADDR_WIDTH = 16  //65 kB of RAM
+    parameter ADDR_WIDTH = 17  //data memory with address from 0x0000_0000 to 0x0002_0000
 ) (
     input  logic          clk,
     input  logic          w_en,
