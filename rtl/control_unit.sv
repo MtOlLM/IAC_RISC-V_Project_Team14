@@ -9,7 +9,7 @@ module control_unit (
     output logic [  3:0] ALU_control,
     output logic [  2:1] ALU_src,      //more intuitive, ALU_src[1] for op1 and ALU_src[2] for op2
     output logic [  3:0] mem_write,
-    output logic [  2:1] result_src
+    output logic [  1:0] result_src
 );
     typedef enum logic [2:0] {
         I_IMM,
@@ -89,6 +89,7 @@ module control_unit (
                 reg_write   = TRUE;
                 imm_src     = U_IMM;
                 ALU_src[1]  = TRUE;
+                ALU_src[2]  = TRUE;
                 ALU_control = ADD;
             end
             OPTYPE_LUI: begin
