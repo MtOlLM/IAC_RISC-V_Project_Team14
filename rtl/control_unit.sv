@@ -3,10 +3,11 @@ module control_unit (
     input  logic [  6:0] opcode,
     input  logic [14:12] funct3,
     input  logic         funct7_5,
+    input  logic         funct7_0,
     output logic         reg_write,
     output logic [  1:0] pc_src,
     output logic [  2:0] imm_src,
-    output logic [  3:0] ALU_control,
+    output logic [  4:0] ALU_control,
     output logic [  2:1] ALU_src,      //more intuitive, ALU_src[1] for op1 and ALU_src[2] for op2
     output logic [  3:0] mem_write,
     output logic [  1:0] result_src
@@ -31,7 +32,7 @@ module control_unit (
         INC_PC
     } result_src_type;
 
-    localparam logic [3:0] ADD          = 4'b0_000;
+    localparam logic [4:0] ADD          = 4'b0_0_000;
 
     localparam logic [6:0] OPTYPE_R     = 7'b011_0011;
     localparam logic [6:0] OPTYPE_I     = 7'b001_0011;
@@ -46,7 +47,7 @@ module control_unit (
     logic branch_jalr;
 
     always_comb begin
-        ALU_control = {funct7_5, funct3};
+        ALU_control = {funct7_0, funct7_5, funct3};
 
         branch_jalr = FALSE;
         reg_write = FALSE;
