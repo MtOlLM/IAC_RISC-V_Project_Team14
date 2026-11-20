@@ -109,6 +109,11 @@ module alu_m #(
     logic [2*DATA_WIDTH - 1:0] prod_uu;
     logic [2*DATA_WIDTH - 1:0] prod_su;
 
+    //overflow only affect signed
+    //zero affect both signed and unsigned
+    logic overflow;
+    logic zero;
+
     always_comb begin
         prod_ss = $signed({{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1}) *
                   $signed({{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2});
@@ -117,19 +122,30 @@ module alu_m #(
         prod_su = $signed({{DATA_WIDTH{ALUOp1[31]}}, ALUOp1}) *
                   $signed({DATA_WIDTH{1'b0}}, ALUOp2);
 
+        //ALUOp1 == - 2^(data_width - 1) && ALUOp2 == -1
+        overflow = ALUOp1[DATA_WIDTH - 1] && (~| ALUOp1[DATA_WIDTH-2 : 0]) &&
+                   ALUOp2[0] && (~| ALUOp2[DATA_WIDTH-1 : 1]);
+        zero = ~|ALUOp2;
+
         case (ALUctrl)
             MUL:     m_out = prod_ss[DATA_WIDTH-1:0];
             MULH:    m_out = prod_ss[2*DATA_WIDTH-1 : DATA_WIDTH];
             MULSU:   m_out = prod_su[2*DATA_WIDTH-1 : DATA_WIDTH];
             MULU:    m_out = prod_uu[2*DATA_WIDTH-1 : DATA_WIDTH];
-            DIV:     m_out = $signed({{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1}) /
-                             $signed({{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2});
-            DIVU:    m_out = {{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1} /
-                             {{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2};
-            REM:     m_out = $signed({{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1}) %
-                             $signed({{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2});
-            REMU:    m_out = {{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1} %
-                             {{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2};
+            DIV:     if(zero)          m_out = {DATA_WIDTH{1'b1}};
+                     else if(overflow) m_out = {1'b1, {(DATA_WIDTH-1){1'b0}}};
+                     else              m_out = $signed({{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1}) /
+                                               $signed({{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2});
+            DIVU:    if(zero)          m_out = {DATA_WIDTH{1'b1}};
+                     else              m_out = {{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1} /
+                                               {{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2};
+            REM:     if(zero)          m_out = ALUOp1;
+                     else if(overflow) m_out = {DATA_WIDTH{1'b0}};
+                     else              m_out = $signed({{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1}) %
+                                               $signed({{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2});
+            REMU:    if(zero)          m_out = ALUOp1;
+                     else              m_out = {{DATA_WIDTH{ALUOp1[DATA_WIDTH-1]}}, ALUOp1} %
+                                               {{DATA_WIDTH{ALUOp2[DATA_WIDTH-1]}}, ALUOp2};
             default: m_out = {(DATA_WIDTH) {1'b0}};
         endcase
     end
