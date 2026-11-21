@@ -21,7 +21,7 @@ module top #(
     logic       reg_write;
     logic [1:0] pc_src;
     logic [2:0] imm_src;
-    logic [3:0] ALU_control;
+    logic [4:0] ALU_control;
     logic [2:1] ALU_src;
     logic [3:0] mem_write;
     logic [1:0] result_src;
@@ -37,6 +37,7 @@ module top #(
         .opcode     (instr[6:0]),
         .funct3     (instr[14:12]),
         .funct7_5   (instr[30]),
+        .funct7_0   (instr[25]),
         .reg_write  (reg_write),
         .pc_src     (pc_src),
         .imm_src    (imm_src),
