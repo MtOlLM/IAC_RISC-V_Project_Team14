@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "Vdut.h"
 #include "verilated.h"
@@ -21,6 +22,7 @@ public:
         top = std::make_unique<Vdut>(contextp.get());
         tfp = std::make_unique<VerilatedVcdC>();
         top->trace(tfp.get(), 99);
+        const auto *info = ::testing::UnitTest::GetInstance()->current_test_info();
         std::string name = std::string("vcds/") + info->test_suite_name() + "_" + info->name() + ".vcd";
         tfp->open(name.c_str());
         initializeInputs();
