@@ -113,6 +113,14 @@ static uint32_t branch_ref(uint32_t a, uint32_t b)
     return (eq << 3) | (lt << 1) | ltu;
 }
 
+static std::string hex(uint32_t value)
+{
+    //11 bytes:2 for '0x', 8 for 32 bits of value, 1 for '\0' terminator
+    char buf[11];
+    std::snprintf(buf, sizeof(buf), "0x%08X", value);
+    return buf;
+}
+
 static const uint32_t EDGE_VALUES[] = {
     0x00000000, 0x00000001, 0x00000002, 0x00000003,
     0x0000001F, 0x00000020, 0x00000021,
@@ -178,9 +186,9 @@ protected:
             if (top->ALUout != expected){
                 failures++;
                 if (failures <= MAX_REPORTED)
-                    FAIL() << name << " " << a << ", " << b
-                                   << ": expected " << expected
-                                   << ", got " << top->ALUout;
+                    FAIL() << name << " " << hex(a) << ", " << hex(b)
+                                   << ": expected " << hex(expected)
+                                   << ", got " << hex(top->ALUout);
             }
         }
     }
@@ -224,9 +232,9 @@ TEST_F(AluTestbench, BranchFlags)
         if (top->branch_ctrl != expected){
             failures++;
             if (failures <= MAX_REPORTED)
-                FAIL() << "branch_ctrl " << a << ", " << b
-                                         << ": expected  " << expected
-                                         << ", got " << top->branch_ctrl;
+                FAIL() << "branch_ctrl " << hex(a) << ", " << hex(b)
+                                         << ": expected  " << hex(expected)
+                                         << ", got " << hex(top->branch_ctrl);
         }
     }
 }
