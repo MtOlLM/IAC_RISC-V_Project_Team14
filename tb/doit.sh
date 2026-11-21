@@ -51,6 +51,8 @@ rm -rf "$OBJ_DIR"
 
 cd "$SCRIPT_DIR"
 
+mkdir "$SCRIPT_DIR/vcds"
+
 # Iterate through files
 for file in "${files[@]}"; do
     name=$(basename "$file" _tb.cpp | cut -f1 -d\-)

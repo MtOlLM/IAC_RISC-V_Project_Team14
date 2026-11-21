@@ -21,8 +21,7 @@ public:
         top = std::make_unique<Vdut>(contextp.get());
         tfp = std::make_unique<VerilatedVcdC>();
         top->trace(tfp.get(), 99);
-        std::string name = std::string(
-            ::testing::UnitTest::GetInstance()->current_test_info()->name()) + ".vcd";
+        std::string name = std::string("vcds/") + info->test_suite_name() + "_" + info->name() + ".vcd";
         tfp->open(name.c_str());
         initializeInputs();
     }
