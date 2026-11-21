@@ -93,7 +93,7 @@ module alu_m #(
     output logic [DATA_WIDTH-1:0] m_out
 );
     // just funct3 essentially
-    typedef enum logic [3:0] {
+    typedef enum logic [2:0] {
         MUL   = 3'b000,
         MULH  = 3'b001,
         MULSU = 3'b010,
@@ -120,7 +120,7 @@ module alu_m #(
         prod_uu = {{DATA_WIDTH{1'b0}}, ALUOp1} *
                   {{DATA_WIDTH{1'b0}}, ALUOp2};
         prod_su = $signed({{DATA_WIDTH{ALUOp1[31]}}, ALUOp1}) *
-                  $signed({DATA_WIDTH{1'b0}}, ALUOp2);
+                  $signed({{DATA_WIDTH{1'b0}}, ALUOp2});
 
         //ALUOp1 == - 2^(data_width - 1) && ALUOp2 == -1
         overflow = ALUOp1[DATA_WIDTH - 1] && (~| ALUOp1[DATA_WIDTH-2 : 0]) &&
