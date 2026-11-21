@@ -5,7 +5,7 @@ module alu #(
     input  logic [DATA_WIDTH-1:0] ALUOp2,
     input  logic [           4:0] ALUctrl,
     output logic [DATA_WIDTH-1:0] ALUout,
-    output logic [           2:0] branch_ctrl
+    output logic [           3:0] branch_ctrl
 );
     logic [DATA_WIDTH-1:0] i_out, m_out;
 
@@ -44,7 +44,7 @@ module alu_i #(
     input  logic [DATA_WIDTH-1:0] ALUOp2,
     input  logic [           3:0] ALUctrl,
     output logic [DATA_WIDTH-1:0] i_out,
-    output logic [           2:0] branch_ctrl
+    output logic [           3:0] branch_ctrl
 );
     // Encoding = {funct7[5], funct3}, so decode is just a concatenation
     typedef enum logic [3:0] {

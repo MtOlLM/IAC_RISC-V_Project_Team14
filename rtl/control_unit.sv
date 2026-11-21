@@ -1,5 +1,5 @@
 module control_unit (
-    input  logic [  2:0] branch_ctrl,
+    input  logic [  3:0] branch_ctrl,
     input  logic [  6:0] opcode,
     input  logic [14:12] funct3,
     input  logic         funct7_5,
@@ -111,6 +111,6 @@ module control_unit (
             default: ;
         endcase
 
-        pc_src[0] = (branch_ctrl[funct3[14:13]] ^ funct3[12]) & branch;
+        pc_src[0] = (branch_ctrl[funct3[14:13]] ^ funct3[12]) & branch_jalr;
     end
 endmodule
