@@ -1,5 +1,5 @@
 module program_counter #(
-    parameter logic [31:0] RESET_PC = 32'h0000_0000
+    parameter logic [31:0] RESET_PC = 32'hBFC0_0000
 ) (
     input  logic        clk,
     input  logic        rst,
@@ -16,7 +16,7 @@ module program_counter #(
     always_comb begin
         inc_pc = pc + 32'd4;
         relative_pc = pc + imm_op;
-        absolute_pc = rs1 + imm_op;
+        absolute_pc = (rs1 + imm_op) & 32'hFFFF_FFFE;
         case (pc_src)
             2'b00:   next_pc = inc_pc;
             2'b01:   next_pc = relative_pc;
