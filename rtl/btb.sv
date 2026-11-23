@@ -53,18 +53,18 @@ module btb #(
         set_u = up_pc[SET_WIDTH+1:2] << WAY_WIDTH;
         idx_u = set_u + way_u;
 
-        tag_u = upd_pc[ADDR_WIDTH-1:SET_WIDTH+2];
+        tag_u = up_pc[ADDR_WIDTH-1:SET_WIDTH+2];
     end
 
 
     always_ff @(posedge clk)
         if (rst) begin
             for (int i = 0; i < ENTRIES * WAYS; i++) valid[i] <= 1'b0;
-        end else if (upd_en) begin
+        end else if (up_en) begin
             valid[idx_u]  <= 1'b1;
             tag[idx_u]    <= tag_u;
-            target[idx_u] <= upd_target;
-            kind[idx_u]   <= upd_type;
+            target[idx_u] <= up_target;
+            kind[idx_u]   <= up_type;
         end
 
 endmodule
