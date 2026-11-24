@@ -1,10 +1,11 @@
 // Branch predictor: BTB + BHT(bimodal) + RAS
 
 //BTB type encoding:
-//  2'b00  BR_COND  conditional branch
-//  2'b01  BR_JUMP  jal / jalr that is not a call or return
-//  2'b10  BR_CALL  stack push
-//  2'b11  BR_RET   stack pop
+//  3'b000  BR_COND    conditional branch
+//  3'b001  BR_JUMP    jal / jalr that is not a call or return
+//  3'b010  BR_CALL    stack push
+//  3'b011  BR_RET     stack pop
+//  3'b100  BR_CORO stack pop and push (coroutine)
 module bpu #(
     parameter DATA_WIDTH = 32,  //complete instruction/data/address width
     parameter ADDR_WIDTH = 12,  //width of bits in address used for instruction memory, including the byte offset
@@ -25,22 +26,23 @@ module bpu #(
     // execute stage
     input  logic                     up_en,         // valid branch/jump in execution stage
     input  logic [   DATA_WIDTH-1:0] up_pc,
-    input  logic [              1:0] up_type,
+    input  logic [              2:0] up_type,
     input  logic                     up_taken,
     input  logic [   DATA_WIDTH-1:0] up_target,
     input  logic                     mispredict,
     input  logic [RAS_PTR_WIDTH-1:0] up_ras_ptr     // ras_ptrF carried with the instruction
 );
-    typedef enum logic [1:0] {
-        BR_COND = 2'b00,
-        BR_JUMP = 2'b01,
-        BR_CALL = 2'b10,
-        BR_RET  = 2'b11
+    typedef enum logic [2:0] {
+        BR_COND = 3'b000,
+        BR_JUMP = 3'b001,
+        BR_CALL = 3'b010,
+        BR_RET  = 3'b011,
+        BR_CORO = 3'b100
     } branch_type;
 
     logic                  btb_hit;
     logic [ADDR_WIDTH-1:2] btb_target;
-    logic [           1:0] btb_type;
+    logic [           2:0] btb_type;
     logic                  bht_taken;
     logic [ADDR_WIDTH-1:2] ras_top;
     logic ras_push, ras_pop;
@@ -64,6 +66,12 @@ module bpu #(
                     pred_targetF = {ADDR_PREFIX, ras_top, 2'b00};
                     ras_pop      = fetch_en;
                 end
+                BR_CORO: begin
+                    pred_takenF  = 1'b1;
+                    pred_targetF = {ADDR_PREFIX, ras_top, 2'b00};
+                    ras_push     = fetch_en;
+                    ras_pop      = fetch_en;
+                end
                 default: ;
             endcase
     end
@@ -79,7 +87,7 @@ module bpu #(
         .hitF     (btb_hit),
         .targetF  (btb_target[ADDR_WIDTH-1:2]),
         .typeF    (btb_type),
-        .up_en    (up_en && up_taken),    //recorded only when a branch is taken
+        .up_en    (up_en && up_taken),           //recorded only when a branch is taken
         .up_pc    (up_pc[ADDR_WIDTH-1:2]),
         .up_target(up_target[ADDR_WIDTH-1:2]),
         .up_type  (up_type)

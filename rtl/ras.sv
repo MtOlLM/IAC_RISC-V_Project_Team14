@@ -28,7 +28,11 @@ module ras #(
     always_ff @(posedge clk)
         if (rst) ptr <= PTR_WIDTH'(0);
         else if (restore) begin  // repair has higher priority than the wrong-path fetch
-            if (restore_push) begin
+            if (restore_push & restore_pop) begin
+                stack[restore_ptr-PTR_WIDTH'(1)] <= restore_addr;
+                ptr                              <= restore_ptr;
+            end
+            else if (restore_push) begin
                 stack[restore_ptr] <= restore_addr;
                 ptr                <= restore_ptr + PTR_WIDTH'(1);
             end
@@ -36,6 +40,9 @@ module ras #(
                 ptr <= restore_ptr - PTR_WIDTH'(1);
             else
                 ptr <= restore_ptr;
+        end
+        else if (push & pop) begin
+            stack[ptr-PTR_WIDTH'(1)] <= push_addr; //overwrite the current top without changing the ptr
         end
         else if (push) begin
             stack[ptr] <= push_addr;

@@ -11,12 +11,12 @@ module btb #(
     input  logic [ADDR_WIDTH-1:2] pcF,
     output logic                  hitF,
     output logic [ADDR_WIDTH-1:2] targetF,
-    output logic [           1:0] typeF,
+    output logic [           2:0] typeF,
     //update
     input  logic                  up_en,
     input  logic [ADDR_WIDTH-1:2] up_pc,
     input  logic [ADDR_WIDTH-1:2] up_target,
-    input  logic [           1:0] up_type
+    input  logic [           2:0] up_type
 );
     localparam SETS      = 2 ** SET_WIDTH;
     localparam WAYS      = 2 ** WAY_WIDTH;
@@ -27,7 +27,7 @@ module btb #(
     logic                  valid [SETS*WAYS-1:0];
     logic [ TAG_WIDTH-1:0] tag   [SETS*WAYS-1:0];
     logic [ADDR_WIDTH-1:2] target[SETS*WAYS-1:0];
-    logic [           1:0] kind  [SETS*WAYS-1:0];  //type itself is a keyword in SystemVerilog
+    logic [           2:0] kind  [SETS*WAYS-1:0];  //type itself is a keyword in SystemVerilog
     logic [  WAY_BITS-1:0] idx   [     SETS-1:0];
 
     logic [SET_WIDTH-1:0] set_f, set_u;
@@ -44,7 +44,7 @@ module btb #(
 
         hitF    = 1'b0;
         targetF = (ADDR_WIDTH-2)'(0);
-        typeF   = 2'b00;
+        typeF   = 3'b000;
 
         for (int w = 0; w < WAYS; w++)
             if (valid[idx_f+IDX_BITS'(w)] && tag[idx_f+IDX_BITS'(w)] == tag_f) begin
