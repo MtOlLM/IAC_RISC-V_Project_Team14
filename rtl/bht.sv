@@ -13,7 +13,7 @@ module bht #(
     input  logic [ADDR_WIDTH-1:2] up_pc,
     input  logic                  up_taken
 );
-    localparam ENTRIES = 2 ** INDEX_BITS;
+    localparam ENTRIES = 2 ** ADDR_WIDTH;
 
     logic [1:0] counter[ENTRIES];
 
