@@ -75,13 +75,13 @@ module bpu #(
     ) branch_target_buffer (
         .clk      (clk),
         .rst      (rst),
-        .pcF      (pcF[ADDR_WIDTH-1:0]),
+        .pcF      (pcF[ADDR_WIDTH-1:2]),
         .hitF     (btb_hit),
-        .targetF  (btb_target),
+        .targetF  (btb_target[ADDR_WIDTH-1:2]),
         .typeF    (btb_type),
         .up_en    (up_en && up_taken),    //recorded only when a branch is taken
-        .up_pc    (up_pc),
-        .up_target(up_target),
+        .up_pc    (up_pc[ADDR_WIDTH-1:2]),
+        .up_target(up_target[ADDR_WIDTH-1:2]),
         .up_type  (up_type)
     );
 
