@@ -61,7 +61,7 @@ module bpu #(
                 end
                 BR_RET: begin
                     pred_takenF  = 1'b1;
-                    pred_targetF = {ADDR_PREFIX, ras_pop, 2'b00};
+                    pred_targetF = {ADDR_PREFIX, ras_top, 2'b00};
                     ras_pop      = fetch_en;
                 end
                 default: ;
