@@ -13,24 +13,31 @@ module bpu #(
     parameter BTB_SET_WIDTH = 6,
     parameter BTB_WAY_WIDTH = 1,
     parameter BHT_SET_WIDTH = 8,
-    parameter RAS_PTR_WIDTH = 4
+    parameter RAS_PTR_WIDTH = 4,
+    parameter REG_ADDR_WIDTH = 5
 ) (
-    input  logic                     clk,
-    input  logic                     rst,
+    input  logic                      clk,
+    input  logic                      rst,
     // fetch stage
-    input  logic                     fetch_en,      //if advances this cycle (not stalled)
-    input  logic [   DATA_WIDTH-1:0] pcF,
-    output logic                     pred_takenF,
-    output logic [   DATA_WIDTH-1:0] pred_targetF,
-    output logic [RAS_PTR_WIDTH-1:0] ras_ptrF,
+    input  logic                      fetch_en,      //if advances this cycle (not stalled)
+    input  logic [    DATA_WIDTH-1:0] pcF,
+    output logic                      pred_takenF,
+    output logic [    DATA_WIDTH-1:0] pred_targetF,
+    output logic [ RAS_PTR_WIDTH-1:0] ras_ptrF,
     // execute stage
-    input  logic                     up_en,         // valid branch/jump in execution stage
-    input  logic [   DATA_WIDTH-1:0] up_pc,
-    input  logic [              2:0] up_type,
-    input  logic                     up_taken,
-    input  logic [   DATA_WIDTH-1:0] up_target,
-    input  logic                     mispredict,
-    input  logic [RAS_PTR_WIDTH-1:0] up_ras_ptr     // ras_ptrF carried with the instruction
+    input  logic                      up_en,         // valid branch/jump in execution stage
+    input  logic [    DATA_WIDTH-1:0] up_pc,
+    input  logic [               2:0] branch_ctrl,
+    input  logic [               2:0] funct3E,
+    input  logic                      jumpE,
+    input  logic                      branchE,
+    input  logic [    DATA_WIDTH-1:0] alu_out,
+    input  logic [REG_ADDR_WIDTH-1:0] rs1E,
+    input  logic [REG_ADDR_WIDTH-1:0] rdE,
+    input  logic                      jalrE,
+    input  logic [    DATA_WIDTH-1:0] pred_targetE,
+    input  logic                      pred_takenE,
+    input  logic [ RAS_PTR_WIDTH-1:0] up_ras_ptr     // ras_ptrF carried with the instruction
 );
     typedef enum logic [2:0] {
         BR_COND = 3'b000,
@@ -40,6 +47,10 @@ module bpu #(
         BR_CORO = 3'b100
     } branch_type;
 
+    logic [           2:0] up_type;
+    logic                  up_taken;
+    logic [DATA_WIDTH-1:0] up_target;
+    logic                  mispredict;
     logic                  btb_hit;
     logic [ADDR_WIDTH-1:2] btb_target;
     logic [           2:0] btb_type;
@@ -123,5 +134,31 @@ module bpu #(
         .restore_pop (up_en && up_type == BR_RET),
         .restore_addr(up_pc[ADDR_WIDTH-1:2] + (ADDR_WIDTH - 2)'(1))
     );
+
+    mispredict_unit #(
+        .DATA_WIDTH(DATA_WIDTH)
+    ) mispredict_unit (
+        .branch_ctrl (branch_ctrl),
+        .funct3      (funct3E),
+        .jumpE       (jumpE),
+        .branchE     (branchE),
+        .alu_out     (alu_out),
+        .pred_targetE(pred_targetE),
+        .pred_takenE (pred_takenE),
+        .mispredict  (mispredict),
+        .up_taken    (up_taken),
+        .up_target   (up_target)
+    );
+
+    type_unit #(
+        .REG_ADDR_WIDTH(REG_ADDR_WIDTH)
+    ) type_unit (
+        .rs1E   (rs1E),
+        .rdE    (rdE),
+        .jalrE  (jalrE),
+        .branchE(branchE),
+        .up_type(up_type)
+    );
+
 
 endmodule
