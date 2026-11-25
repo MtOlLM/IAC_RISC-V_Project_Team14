@@ -15,7 +15,7 @@ module regfile #(
     for(int i = 0; i < (2**ADDRESS_WIDTH) ; i++) register_file[i] = 32'b0;
   end
   
-  always_ff @(posedge clk) 
+  always_ff @(negedge clk) 
     if (WE3 && (AD3 != '0)) register_file[AD3] <= WD3;
 
   always_comb begin
