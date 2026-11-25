@@ -24,7 +24,7 @@ module mispredict_unit #(
 
     always_comb begin
         up_taken  = 1'b0;
-        up_target = 32'h0000_0000;
+        up_target = 32'hBFC0_0000;
 
         if (branchE) begin
             case (funct3)
