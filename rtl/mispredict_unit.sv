@@ -27,7 +27,7 @@ module mispredict_unit #(
         up_target = 32'hBFC0_0000;
 
         if (branchE) begin
-            case (funct3)
+            case (funct3E)
                 BEQ:     up_taken = branch_ctrl[2];
                 BNE:     up_taken = ~branch_ctrl[2];
                 BLT:     up_taken = branch_ctrl[1];
