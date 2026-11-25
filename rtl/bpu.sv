@@ -119,8 +119,8 @@ module bpu #(
         .ptr         (ras_ptrF),
         .restore     (mispredict),
         .restore_ptr (up_ras_ptr),
-        .restore_push(up_en && up_type == BR_CALL),
-        .restore_pop (up_en && up_type == BR_RET),
+        .restore_push(up_en && (up_type == BR_CALL || up_type == BR_CORO)),
+        .restore_pop (up_en && (up_type == BR_RET || up_type == BR_CORO)),
         .restore_addr(up_pc[ADDR_WIDTH-1:2] + (ADDR_WIDTH - 2)'(1))
     );
 

@@ -12,7 +12,8 @@ enum BrType : uint8_t
     BR_COND = 0,
     BR_JUMP = 1,
     BR_CALL = 2,
-    BR_RET = 3
+    BR_RET = 3,
+    BR_CORO = 4
 };
 
 // predictor output in fetch stage
@@ -227,7 +228,7 @@ TEST_F(BpuTestbench, CallAndReturn)
 
     Prediction pc_ret = fetch(ret_pc);
     EXPECT_TRUE(pc_ret.taken);
-    EXPECT_EQ(pc_ret.target, ret.target) << "return should be predicted from the RAS";
+    EXPECT_EQ(pc_ret.target, ret.target);
     EXPECT_FALSE(execute(ret_pc, ret, pc_ret));
 }
 
@@ -268,6 +269,63 @@ TEST_F(BpuTestbench, NestedCallsReturn)
         }
         EXPECT_EQ(execute(ret_a, o_ret_a, p), !trained);
     }
+}
+
+TEST_F(BpuTestbench, CoroutinePrediction)
+{
+    const uint32_t call_pc = mem_base + 0x100;
+    const uint32_t coro_pc = mem_base + 0x310;
+    const uint32_t ret_pc  = mem_base + 0x108;
+    const Outcome  call    = {BR_CALL, true, mem_base + 0x300};
+    const Outcome  coro    = {BR_CORO, true, call_pc + 4};
+    const Outcome  ret     = {BR_RET,  true, coro_pc + 4};
+
+    // first passes to the BTB - misprediction expected
+    EXPECT_TRUE(run(call_pc, call));
+    EXPECT_TRUE(run(coro_pc, coro));
+    EXPECT_TRUE(run(ret_pc, ret));
+
+    // second passes - expect correct prediction
+    Prediction p_call = fetch(call_pc);
+    EXPECT_FALSE(execute(call_pc, call, p_call));
+
+    Prediction p_coro = fetch(coro_pc);
+    EXPECT_TRUE(p_coro.taken);
+    EXPECT_EQ(p_coro.target, coro.target);
+    EXPECT_FALSE(execute(coro_pc, coro, p_coro));
+
+    Prediction p_ret = fetch(ret_pc);
+    EXPECT_EQ(p_ret.ras_ptr, p_coro.ras_ptr);
+    EXPECT_EQ(p_ret.target, ret.target);
+    EXPECT_FALSE(execute(ret_pc, ret, p_ret));
+
+    EXPECT_EQ(fetch(mem_base + 0x000).ras_ptr, p_call.ras_ptr);
+}
+
+TEST_F(BpuTestbench, CoroutineRestore)
+{
+    const uint32_t call_pc = mem_base + 0x100;
+    const uint32_t coro_pc = mem_base + 0x310;
+    const uint32_t ret_pc  = mem_base + 0x108;
+    const Outcome  call    = {BR_CALL, true, mem_base + 0x300};
+    const Outcome  coro    = {BR_CORO, true, call_pc + 4};
+    const Outcome  ret     = {BR_RET,  true, coro_pc + 4};
+
+    // the coroutine switch stays unknown for prediction
+    run(call_pc, call);
+    run(ret_pc, {BR_RET, true, call_pc + 4});
+
+    Prediction p_call = fetch(call_pc);  // predicted, pushes 0x104
+    EXPECT_FALSE(execute(call_pc, call, p_call));
+
+    // first encounter: BTB miss, so the push and pop happen in the restore path
+    Prediction p_coro = fetch(coro_pc);
+    EXPECT_FALSE(p_coro.taken);
+    EXPECT_TRUE(execute(coro_pc, coro, p_coro));
+
+    Prediction p_ret = fetch(ret_pc);  //predicted, pop
+    EXPECT_EQ(p_ret.ras_ptr, p_coro.ras_ptr); //should be the same pointer if the restore is correct
+    EXPECT_EQ(p_ret.target, ret.target); // should be coro_pc + 4
 }
 
 TEST_F(BpuTestbench, RasRepairedAfterWrongPathReturn)
