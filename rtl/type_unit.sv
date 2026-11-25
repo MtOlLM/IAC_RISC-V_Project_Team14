@@ -4,7 +4,7 @@ module type_unit #(
     input  logic [REG_ADDR_WIDTH-1:0] rs1E,
     input  logic [REG_ADDR_WIDTH-1:0] rdE,
     input  logic                      jalrE,
-    input                             branchE,
+    input  logic                      branchE,
     output logic [               2:0] up_type
 );
     typedef enum logic [2:0] {
