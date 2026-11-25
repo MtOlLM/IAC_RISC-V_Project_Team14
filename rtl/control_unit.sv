@@ -1,16 +1,18 @@
 module control_unit (
-    input  logic [  3:0] branch_ctrl,
     input  logic [  6:0] opcode,
     input  logic [14:12] funct3,
     input  logic         funct7_5,
     output logic         reg_write,
-    output logic [  1:0] pc_src,
+    output logic         branch,       
+    output logic         jump,         // for jal or jalr
+    output logic         jalr,         // target uses rs1 instead of pc
     output logic [  2:0] imm_src,
     output logic [  3:0] ALU_control,
-    output logic [  2:1] ALU_src,      //more intuitive, ALU_src[1] for op1 and ALU_src[2] for op2
+    output logic [  2:1] ALU_src,      //[1] for op1 and [2] for op2
     output logic [  3:0] mem_write,
     output logic [  1:0] result_src
-);
+);    
+    
     typedef enum logic [2:0] {
         I_IMM,
         S_IMM,
@@ -52,7 +54,9 @@ module control_unit (
         ALU_src = {2{FALSE}};
         mem_write = {4{FALSE}};
         result_src = ALU_OUT;
-        pc_src = 2'b00;
+        branch = FALSE;
+        jump = FALSE;
+        jalr = FALSE;
 
         case (opcode)
             OPTYPE_R: begin
@@ -79,15 +83,7 @@ module control_unit (
             end
             OPTYPE_B: begin
                 imm_src = B_IMM;
-                case (funct3)
-                    3'b000: pc_src[0] =  branch_ctrl[3]; // BEQ
-                    3'b001: pc_src[0] = ~branch_ctrl[3]; // BNE
-                    3'b100: pc_src[0] =  branch_ctrl[1]; // BLT
-                    3'b101: pc_src[0] = ~branch_ctrl[1]; // BGE
-                    3'b110: pc_src[0] =  branch_ctrl[0]; // BLTU
-                    3'b111: pc_src[0] = ~branch_ctrl[0]; // BGEU
-                    default: pc_src = 2'b00;
-                endcase
+                branch  = TRUE;     // taken/not-taken is decided in branch_unit
             end
             OPTYPE_I_L: begin
                 reg_write   = TRUE;
@@ -108,13 +104,14 @@ module control_unit (
                 result_src = IMM;
             end
             OPTYPE_JALR: begin
-                pc_src     = 2'b10;
+                jump       = TRUE;
+                jalr       = TRUE;
                 reg_write  = TRUE;
                 imm_src    = I_IMM;
                 result_src = INC_PC;
             end
             OPTYPE_JAL: begin
-                pc_src     = 2'b01;
+                jump       = TRUE;
                 reg_write  = TRUE;
                 imm_src    = J_IMM;
                 result_src = INC_PC;

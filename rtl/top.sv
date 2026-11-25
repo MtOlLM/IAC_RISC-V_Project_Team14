@@ -19,7 +19,9 @@ module top #(
     //control signals
     logic [3:0] branch_ctrl;
     logic       reg_write;
-    logic [1:0] pc_src;
+    logic       branch, jump, jalr;     //instruction type from the control unit
+    logic       pc_src;                 //1 = take pc_target
+    logic [DATA_WIDTH-1 : 0] pc_target; //branch/jump target address
     logic [2:0] imm_src;
     logic [3:0] ALU_control;
     logic [2:1] ALU_src;
@@ -33,12 +35,13 @@ module top #(
     );
 
     control_unit control_unit (
-        .branch_ctrl(branch_ctrl),
         .opcode     (instr[6:0]),
         .funct3     (instr[14:12]),
         .funct7_5   (instr[30]),
         .reg_write  (reg_write),
-        .pc_src     (pc_src),
+        .branch     (branch),
+        .jump       (jump),
+        .jalr       (jalr),
         .imm_src    (imm_src),
         .ALU_control(ALU_control),
         .ALU_src    (ALU_src),
@@ -86,14 +89,25 @@ module top #(
         .branch_ctrl(branch_ctrl)
     );
 
+    branch_unit branch_unit (
+        .branch     (branch),
+        .jump       (jump),
+        .funct3     (instr[14:12]),
+        .branch_ctrl(branch_ctrl),
+        .pc_src     (pc_src)
+    );
+
+    // choose between pc and rs1 for jalr instruction, then add the immediate offset to get the target address 
+    assign pc_target = ((jalr ? rs1 : pc) + imm_op) & ~32'd1;
+
     program_counter program_counter (
-        .clk   (clk),
-        .rst   (rst),
-        .rs1   (rs1),
-        .pc_src(pc_src),
-        .imm_op(imm_op),
-        .pc    (pc),
-        .inc_pc(inc_pc)
+        .clk      (clk),
+        .rst      (rst),
+        .en       (1'b1),        // for stalling
+        .pc_src   (pc_src),
+        .pc_target(pc_target),
+        .pc       (pc),
+        .inc_pc   (inc_pc)
     );
 
     mcu MCU (

@@ -3,30 +3,16 @@ module program_counter #(
 ) (
     input  logic        clk,
     input  logic        rst,
-    input  logic [31:0] rs1,
-    input  logic [ 1:0] pc_src,
-    input  logic [31:0] imm_op,
+    input  logic        en,         // 0 = stall (hold pc)
+    input  logic        pc_src,     // 1 = jump to pc_target
+    input  logic [31:0] pc_target,  // branch/jump target, computed outside the PC
     output logic [31:0] pc,
     output logic [31:0] inc_pc
 );
-    logic [31:0] relative_pc;  //branch and jal
-    logic [31:0] absolute_pc;  //jalr
-    logic [31:0] next_pc;
-
-    always_comb begin
-        inc_pc = pc + 32'd4;
-        relative_pc = pc + imm_op;
-        absolute_pc = (rs1 + imm_op) & 32'hFFFF_FFFE;
-        case (pc_src)
-            2'b00:   next_pc = inc_pc;
-            2'b01:   next_pc = relative_pc;
-            2'b10:   next_pc = absolute_pc;
-            default: next_pc = inc_pc;
-        endcase
-    end
+    assign inc_pc = pc + 32'd4; // instruction width is 4 bytes
 
     always_ff @(posedge clk) begin
-        if (rst) pc <= RESET_PC;
-        else pc <= next_pc;
+        if (rst)     pc <= RESET_PC;
+        else if (en) pc <= pc_src ? pc_target : inc_pc;
     end
 endmodule
