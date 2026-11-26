@@ -25,7 +25,10 @@ module top #(
     logic [2:1] ALU_src;
     logic [3:0] mem_write;
     logic [1:0] result_src;
+    logic       mem_state;
+    logic       stall;
 
+    assign mem_state = (result_src == 2'b01) || (|mem_write);
 
     ROM instr_mem (
         .addr(pc),
@@ -57,7 +60,7 @@ module top #(
         .AD2(instr[24:20]),
         .AD3(instr[11:7]),
         .clk(clk),
-        .WE3(reg_write),
+        .WE3(reg_write && !stall),,
         .WD3(result),
         .RD1(rs1),
         .RD2(rs2),
@@ -89,6 +92,7 @@ module top #(
     program_counter program_counter (
         .clk   (clk),
         .rst   (rst),
+        .stall (stall),
         .rs1   (rs1),
         .pc_src(pc_src),
         .imm_op(imm_op),
@@ -98,6 +102,9 @@ module top #(
 
     mcu MCU (
         .clk     (clk),
+        .rst     (rst),
+        .mem_req (mem_req),
+        .stall   (stall),
         .w_en    (mem_write),
         .funct3  (instr[14:12]),
         .data_in (rs2),
