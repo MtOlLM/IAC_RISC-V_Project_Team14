@@ -4,12 +4,12 @@ module pipe_reg #(
 ) (
     input  logic             clk,
     input  logic             rst,
-    input  logic             en,    // 0 = stall
-    input  logic             clr,   // 1 = flush
+    input  logic             stall,
+    input  logic             flush,
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
     always_ff @(posedge clk)
-        if (rst || clr) q <= '0;
-        else if (en)    q <= d;
+        if (rst || flush) q <= '0;
+        else if (!stall)    q <= d;
 endmodule
