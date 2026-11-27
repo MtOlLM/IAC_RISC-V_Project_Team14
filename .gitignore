@@ -7,3 +7,4 @@ a.out
 a.out.reloc
 .rules.verible_lint
 .DS_Store
+*.cfg
