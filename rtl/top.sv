@@ -3,7 +3,8 @@ module top #(
 ) (
     input  logic                    clk,
     input  logic                    rst,
-    output logic [DATA_WIDTH-1 : 0] a0
+    output logic [DATA_WIDTH-1 : 0] a0,
+    output logic                    fault
 );
     //intruction
     logic [DATA_WIDTH-1 : 0] instr;
@@ -25,6 +26,12 @@ module top #(
     logic [2:1] ALU_src;
     logic [3:0] mem_write;
     logic [1:0] result_src;
+    logic atomic_en, run_enable;
+    logic [DATA_WIDTH-1:0] mem_addr;
+
+    assign mem_addr = atomic_en ? rs1 : ALU_out;
+    assign run_enable = !rst && !fault;
+
 
 
     ROM instr_mem (
@@ -43,7 +50,8 @@ module top #(
         .ALU_control(ALU_control),
         .ALU_src    (ALU_src),
         .mem_write  (mem_write),
-        .result_src (result_src)
+        .result_src (result_src),
+        .atomic_en  (atomic_en)
     );
 
     sign_ext sign_ext (
@@ -57,7 +65,7 @@ module top #(
         .AD2(instr[24:20]),
         .AD3(instr[11:7]),
         .clk(clk),
-        .WE3(reg_write),
+        .WE3(reg_write && run_enable),
         .WD3(result),
         .RD1(rs1),
         .RD2(rs2),
@@ -89,6 +97,7 @@ module top #(
     program_counter program_counter (
         .clk   (clk),
         .rst   (rst),
+        .stall (fault),
         .rs1   (rs1),
         .pc_src(pc_src),
         .imm_op(imm_op),
@@ -97,12 +106,18 @@ module top #(
     );
 
     mcu MCU (
-        .clk     (clk),
-        .w_en    (mem_write),
-        .funct3  (instr[14:12]),
-        .data_in (rs2),
-        .addr    (ALU_out),
-        .data_out(mem_out)
+        .clk        (clk),
+        .rst        (rst),
+        .enable     (run_enable),
+        .atomic_en  (atomic_en),
+        .funct5     (instr[31:27]),
+        .rs2_zero   (instr[24:20] == 5'd0),
+        .w_en       (mem_write),
+        .funct3     (instr[14:12]),
+        .data_in    (rs2),
+        .addr       (mem_addr),
+        .data_out   (mem_out),
+        .fault      (fault)
     );
 
     mux4 result_mux (

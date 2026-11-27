@@ -120,3 +120,15 @@ TEST_F(ControlUnitTestbench, MemoryAndUpperInstructionsKeepTheirPaths)
     decode(0x37);
     EXPECT_EQ(top->result_src, 2);
 }
+
+TEST_F(ControlUnitTestbench, AtomicInstructionsUseTheMemoryResult)
+{
+    decode(0x2f, 2);
+    EXPECT_TRUE(top->atomic_en);
+    EXPECT_TRUE(top->reg_write);
+    EXPECT_EQ(top->result_src, 1);
+    EXPECT_EQ(top->mem_write, 0);
+    EXPECT_EQ(top->pc_src, 0);
+    decode(0x13);
+    EXPECT_FALSE(top->atomic_en);
+}

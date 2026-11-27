@@ -21,14 +21,14 @@ file_extension="${input_file##*.}"
 if [ $file_extension == "c" ]; then
     # IMPORTANT: MUST NOT OPTIMIZE COMPILER! Or instructions could be lost!
     riscv64-unknown-elf-gcc -S -g -O0 -fno-builtin -static \
-                            -march=rv32im -mabi=ilp32 \
+                            -march=rv32ia -mabi=ilp32 \
                             -o "${basename}.s" $input_file \
                             -Wno-unused-result
     # To get test case 24 passing, you need to modify ^^^^
     input_file="${basename}.s"
 fi
 
-riscv64-unknown-elf-as -R -march=rv32im -mabi=ilp32 \
+riscv64-unknown-elf-as -R -march=rv32ia -mabi=ilp32 \
                         -o "a.out" "${input_file}"
 
 # Remove the .s file if necessary

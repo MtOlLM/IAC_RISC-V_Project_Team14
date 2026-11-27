@@ -9,7 +9,8 @@ module control_unit (
     output logic [  3:0] ALU_control,
     output logic [  2:1] ALU_src,      //more intuitive, ALU_src[1] for op1 and ALU_src[2] for op2
     output logic [  3:0] mem_write,
-    output logic [  1:0] result_src
+    output logic [  1:0] result_src,
+    output logic         atomic_en
 );
     typedef enum logic [2:0] {
         I_IMM,
@@ -33,6 +34,7 @@ module control_unit (
 
     localparam logic [3:0] ADD          = 4'b0_000;
 
+    localparam logic [6:0] OPTYPE_A     = 7'b010_1111;
     localparam logic [6:0] OPTYPE_R     = 7'b011_0011;
     localparam logic [6:0] OPTYPE_I     = 7'b001_0011;
     localparam logic [6:0] OPTYPE_S     = 7'b010_0011;
@@ -53,8 +55,14 @@ module control_unit (
         mem_write = {4{FALSE}};
         result_src = ALU_OUT;
         pc_src = 2'b00;
+        atomic_en = FALSE;
 
         case (opcode)
+            OPTYPE_A: begin
+                atomic_en = TRUE;
+                reg_write = TRUE;
+                result_src = MEM_OUT;
+            end
             OPTYPE_R: begin
                 reg_write = TRUE;
                 ALU_control = {funct7_5, funct3};

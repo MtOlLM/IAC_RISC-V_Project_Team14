@@ -3,6 +3,7 @@ module program_counter #(
 ) (
     input  logic        clk,
     input  logic        rst,
+    input  logic        stall,
     input  logic [31:0] rs1,
     input  logic [ 1:0] pc_src,
     input  logic [31:0] imm_op,
@@ -27,6 +28,6 @@ module program_counter #(
 
     always_ff @(posedge clk) begin
         if (rst) pc <= RESET_PC;
-        else pc <= next_pc;
+        else if (!stall) pc <= next_pc;
     end
 endmodule

@@ -9,6 +9,7 @@ protected:
     {
         top->clk = 0;
         top->rst = 1;
+        top->stall = 0;
         top->rs1 = 0;
         top->pc_src = 0;
         top->imm_op = 0;
@@ -53,4 +54,18 @@ TEST_F(ProgramCounterTestbench, JalrClearsTheLowTargetBit)
     top->imm_op = static_cast<unsigned int>(-4);
     runSimulation(1);
     EXPECT_EQ(top->pc, 0x100u);
+}
+
+TEST_F(ProgramCounterTestbench, StallHoldsPcAndResetStillWorks)
+{
+    top->stall = 1;
+    runSimulation(3);
+    EXPECT_EQ(top->pc, 0xBFC00000u);
+    top->rst = 1;
+    runSimulation(1);
+    EXPECT_EQ(top->pc, 0xBFC00000u);
+    top->rst = 0;
+    top->stall = 0;
+    runSimulation(1);
+    EXPECT_EQ(top->pc, 0xBFC00004u);
 }
