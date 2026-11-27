@@ -15,7 +15,7 @@ module sign_ext #(
 
     always_comb
         case (imm_src)
-            J_TYPE: out = {{(OUTPUT_WIDTH - 21) {in[31]}}, in[19:12], in[20], in[30:25], in[24:21], 1'b0};  //append the zero at the end
+            J_TYPE: out = {{(OUTPUT_WIDTH - 21) {in[31]}}, in[31], in[19:12], in[20], in[30:21], 1'b0};  //append the zero at the end
             U_TYPE: out = {in[31:12], {(OUTPUT_WIDTH - 20) {1'b0}}};
             B_TYPE: out = {{(OUTPUT_WIDTH - 13) {in[31]}}, in[31], in[7], in[30:25], in[11:8], 1'b0};  //append the zero at the end
             S_TYPE: out = {{(OUTPUT_WIDTH - 12) {in[31]}}, in[31:25], in[11:7]};

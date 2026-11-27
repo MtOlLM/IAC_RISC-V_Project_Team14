@@ -17,7 +17,7 @@ module top #(
     logic [DATA_WIDTH-1 : 0] alu_op1, alu_op2, rs1, rs2;
 
     //control signals
-    logic [2:0] branch_ctrl;
+    logic [3:0] branch_ctrl;
     logic       reg_write;
     logic [1:0] pc_src;
     logic [2:0] imm_src;
@@ -100,7 +100,7 @@ module top #(
         .clk     (clk),
         .w_en    (mem_write),
         .funct3  (instr[14:12]),
-        .data_in (rd2_op),
+        .data_in (rs2),
         .addr    (ALU_out),
         .data_out(mem_out)
     );

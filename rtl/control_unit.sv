@@ -1,5 +1,5 @@
 module control_unit (
-    input  logic [  2:0] branch_ctrl,
+    input  logic [  3:0] branch_ctrl,
     input  logic [  6:0] opcode,
     input  logic [14:12] funct3,
     input  logic         funct7_5,
@@ -43,41 +43,51 @@ module control_unit (
     localparam logic [6:0] OPTYPE_I_L   = 7'b000_0011;  //load instructions
     localparam logic [6:0] OPTYPE_JAL   = 7'b110_1111;
 
-    logic branch_jalr;
 
     always_comb begin
-        ALU_control = {funct7_5, funct3};
+        ALU_control = ADD;
 
-        branch_jalr = FALSE;
         reg_write = FALSE;
         imm_src = I_IMM;
         ALU_src = {2{FALSE}};
         mem_write = {4{FALSE}};
         result_src = ALU_OUT;
-        pc_src[1] = FALSE;
+        pc_src = 2'b00;
 
         case (opcode)
             OPTYPE_R: begin
                 reg_write = TRUE;
+                ALU_control = {funct7_5, funct3};
             end
             OPTYPE_I: begin
                 reg_write  = TRUE;
                 ALU_src[2] = TRUE;
+                ALU_control = {1'b0, funct3};
+                // Only right shifts use instruction bit 30.
+                if (funct3 == 3'b101) ALU_control[3] = funct7_5;
             end
             OPTYPE_S: begin
                 imm_src     = S_IMM;
                 ALU_src[2]  = TRUE;
                 ALU_control = ADD;
                 case (funct3[13:12])
-                    2'b00:   w_en = 4'b0001;
-                    2'b01:   w_en = 4'b0011;
-                    2'b10:   w_en = 4'b1111;
-                    default: w_en = 4'b0000;
+                    2'b00:   mem_write = 4'b0001;
+                    2'b01:   mem_write = 4'b0011;
+                    2'b10:   mem_write = 4'b1111;
+                    default: mem_write = 4'b0000;
                 endcase
             end
             OPTYPE_B: begin
-                branch_jalr = TRUE;
-                imm_src     = B_IMM;
+                imm_src = B_IMM;
+                case (funct3)
+                    3'b000: pc_src[0] =  branch_ctrl[3]; // BEQ
+                    3'b001: pc_src[0] = ~branch_ctrl[3]; // BNE
+                    3'b100: pc_src[0] =  branch_ctrl[1]; // BLT
+                    3'b101: pc_src[0] = ~branch_ctrl[1]; // BGE
+                    3'b110: pc_src[0] =  branch_ctrl[0]; // BLTU
+                    3'b111: pc_src[0] = ~branch_ctrl[0]; // BGEU
+                    default: pc_src = 2'b00;
+                endcase
             end
             OPTYPE_I_L: begin
                 reg_write   = TRUE;
@@ -98,11 +108,13 @@ module control_unit (
                 result_src = IMM;
             end
             OPTYPE_JALR: begin
-                branch_jalr = TRUE;
-                reg_write   = TRUE;
-                result_src  = INC_PC;
+                pc_src     = 2'b10;
+                reg_write  = TRUE;
+                imm_src    = I_IMM;
+                result_src = INC_PC;
             end
             OPTYPE_JAL: begin
+                pc_src     = 2'b01;
                 reg_write  = TRUE;
                 imm_src    = J_IMM;
                 result_src = INC_PC;
@@ -110,6 +122,5 @@ module control_unit (
             default: ;
         endcase
 
-        pc_src[0] = (branch_ctrl[funct3[14:13]] ^ funct3[12]) & branch;
     end
 endmodule

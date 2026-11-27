@@ -26,7 +26,7 @@ RED=$(tput setaf 1)
 RESET=$(tput sgr0)
 
 # Homebrew (Apple Silicon) installs gtest outside the default search paths
-EXTRA_CFLAGS=""
+EXTRA_CFLAGS="-std=c++17"
 EXTRA_LDFLAGS=""
 if [ -d /opt/homebrew/include/gtest ]; then
     EXTRA_CFLAGS="-I/opt/homebrew/include -std=c++17"
