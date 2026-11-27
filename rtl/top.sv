@@ -6,14 +6,14 @@ module top #(
     output logic [DATA_WIDTH-1 : 0] a0
 );
     // F, D, E, M and W denote fetch, decode, execute, memory and writeback.
-    // Combinational connections between stages keep the datapath single-cycle.
+    // A cleared valid bit marks a bubble.
 
     // Fetch
     logic [DATA_WIDTH-1:0] pcF, pc_plus4F, instrF;
 
     // Decode
     logic [DATA_WIDTH-1:0] instrD, pcD, pc_plus4D, rd1D, rd2D, immD;
-    logic                 reg_writeD, branchD, jumpD, jalrD;
+    logic                 validD, reg_writeD, branchD, jumpD, jalrD;
     logic [2:0]           imm_srcD;
     logic [3:0]           ALU_controlD, mem_writeD;
     logic [2:1]           ALU_srcD;
@@ -24,7 +24,7 @@ module top #(
     logic [DATA_WIDTH-1:0] alu_op1E, alu_op2E, alu_outE, pc_targetE;
     logic [4:0]           rdE;
     logic [2:0]           funct3E;
-    logic                 reg_writeE, branchE, jumpE, jalrE, pc_srcE;
+    logic                 validE, reg_writeE, branchE, jumpE, jalrE, pc_srcE;
     logic [3:0]           ALU_controlE, branch_ctrlE, mem_writeE;
     logic [2:1]           ALU_srcE;
     logic [1:0]           result_srcE;
@@ -33,14 +33,14 @@ module top #(
     logic [DATA_WIDTH-1:0] alu_outM, write_dataM, immM, pc_plus4M, mem_outM;
     logic [4:0]           rdM;
     logic [2:0]           funct3M;
-    logic                 reg_writeM;
-    logic [3:0]           mem_writeM;
+    logic                 validM, reg_writeM;
+    logic [3:0]           mem_writeM, store_enM;
     logic [1:0]           result_srcM;
 
     // Writeback
     logic [DATA_WIDTH-1:0] alu_outW, mem_outW, immW, pc_plus4W, resultW;
     logic [4:0]           rdW;
-    logic                 reg_writeW;
+    logic                 validW, reg_writeW;
     logic [1:0]           result_srcW;
 
     // Fetch
@@ -59,7 +59,23 @@ module top #(
         .data(instrF)
     );
 
-    assign {instrD, pcD, pc_plus4D} = {instrF, pcF, pc_plus4F};
+    // Fetch/decode registers
+    pipe_reg #(.WIDTH(DATA_WIDTH)) fd_instr_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(instrF), .q(instrD)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) fd_pc_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(pcF), .q(pcD)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) fd_pc_plus4_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(pc_plus4F), .q(pc_plus4D)
+    );
+    pipe_reg #(.WIDTH(1)) fd_valid_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(1'b1), .q(validD)
+    );
 
     // Decode
     control_unit control_unit (
@@ -88,19 +104,78 @@ module top #(
         .AD2(instrD[24:20]),
         .AD3(rdW),
         .clk(clk),
-        .WE3(reg_writeW),
+        .WE3(reg_writeW & validW),
         .WD3(resultW),
         .RD1(rd1D),
         .RD2(rd2D),
         .a0 (a0)
     );
 
-    assign {rd1E, rd2E, pcE, pc_plus4E, immE, rdE, funct3E,
-            reg_writeE, branchE, jumpE, jalrE,
-            result_srcE, mem_writeE, ALU_controlE, ALU_srcE}
-         = {rd1D, rd2D, pcD, pc_plus4D, immD, instrD[11:7], instrD[14:12],
-            reg_writeD, branchD, jumpD, jalrD,
-            result_srcD, mem_writeD, ALU_controlD, ALU_srcD};
+    // Decode/execute registers
+    pipe_reg #(.WIDTH(DATA_WIDTH)) de_rd1_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(rd1D), .q(rd1E)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) de_rd2_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(rd2D), .q(rd2E)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) de_pc_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(pcD), .q(pcE)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) de_pc_plus4_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(pc_plus4D), .q(pc_plus4E)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) de_imm_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(immD), .q(immE)
+    );
+    pipe_reg #(.WIDTH(5)) de_rd_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(instrD[11:7]), .q(rdE)
+    );
+    pipe_reg #(.WIDTH(3)) de_funct3_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(instrD[14:12]), .q(funct3E)
+    );
+    pipe_reg #(.WIDTH(1)) de_reg_write_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(reg_writeD), .q(reg_writeE)
+    );
+    pipe_reg #(.WIDTH(1)) de_branch_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(branchD), .q(branchE)
+    );
+    pipe_reg #(.WIDTH(1)) de_jump_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(jumpD), .q(jumpE)
+    );
+    pipe_reg #(.WIDTH(1)) de_jalr_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(jalrD), .q(jalrE)
+    );
+    pipe_reg #(.WIDTH(2)) de_result_src_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(result_srcD), .q(result_srcE)
+    );
+    pipe_reg #(.WIDTH(4)) de_mem_write_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(mem_writeD), .q(mem_writeE)
+    );
+    pipe_reg #(.WIDTH(4)) de_alu_control_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(ALU_controlD), .q(ALU_controlE)
+    );
+    pipe_reg #(.WIDTH(2)) de_alu_src_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(ALU_srcD), .q(ALU_srcE)
+    );
+    pipe_reg #(.WIDTH(1)) de_valid_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(validD), .q(validE)
+    );
 
     // Execute
     mux ALU_op1_mux (
@@ -126,8 +201,8 @@ module top #(
     );
 
     branch_unit branch_unit (
-        .branch     (branchE),
-        .jump       (jumpE),
+        .branch     (branchE & validE),
+        .jump       (jumpE & validE),
         .funct3     (funct3E),
         .branch_ctrl(branch_ctrlE),
         .pc_src     (pc_srcE)
@@ -136,23 +211,93 @@ module top #(
     // JALR uses rs1 as its base. Other targets use the instruction PC.
     assign pc_targetE = ((jalrE ? rd1E : pcE) + immE) & ~32'd1;
 
-    assign {alu_outM, write_dataM, immM, pc_plus4M,
-            rdM, funct3M, reg_writeM, result_srcM, mem_writeM}
-         = {alu_outE, rd2E, immE, pc_plus4E,
-            rdE, funct3E, reg_writeE, result_srcE, mem_writeE};
+    // Execute/memory registers
+    pipe_reg #(.WIDTH(DATA_WIDTH)) em_alu_out_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(alu_outE), .q(alu_outM)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) em_write_data_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(rd2E), .q(write_dataM)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) em_imm_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(immE), .q(immM)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) em_pc_plus4_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(pc_plus4E), .q(pc_plus4M)
+    );
+    pipe_reg #(.WIDTH(5)) em_rd_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(rdE), .q(rdM)
+    );
+    pipe_reg #(.WIDTH(3)) em_funct3_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(funct3E), .q(funct3M)
+    );
+    pipe_reg #(.WIDTH(1)) em_reg_write_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(reg_writeE), .q(reg_writeM)
+    );
+    pipe_reg #(.WIDTH(2)) em_result_src_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(result_srcE), .q(result_srcM)
+    );
+    pipe_reg #(.WIDTH(4)) em_mem_write_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(mem_writeE), .q(mem_writeM)
+    );
+    pipe_reg #(.WIDTH(1)) em_valid_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(validE), .q(validM)
+    );
 
     // Memory
+    assign store_enM = validM ? mem_writeM : 4'b0000;
+
     mcu MCU (
         .clk     (clk),
-        .w_en    (mem_writeM),
+        .w_en    (store_enM),
         .funct3  (funct3M),
         .data_in (write_dataM),
         .addr    (alu_outM),
         .data_out(mem_outM)
     );
 
-    assign {alu_outW, mem_outW, immW, pc_plus4W, rdW, reg_writeW, result_srcW}
-         = {alu_outM, mem_outM, immM, pc_plus4M, rdM, reg_writeM, result_srcM};
+    // Memory/writeback registers
+    pipe_reg #(.WIDTH(DATA_WIDTH)) mw_alu_out_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(alu_outM), .q(alu_outW)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) mw_mem_out_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(mem_outM), .q(mem_outW)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) mw_imm_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(immM), .q(immW)
+    );
+    pipe_reg #(.WIDTH(DATA_WIDTH)) mw_pc_plus4_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(pc_plus4M), .q(pc_plus4W)
+    );
+    pipe_reg #(.WIDTH(5)) mw_rd_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(rdM), .q(rdW)
+    );
+    pipe_reg #(.WIDTH(1)) mw_reg_write_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(reg_writeM), .q(reg_writeW)
+    );
+    pipe_reg #(.WIDTH(2)) mw_result_src_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(result_srcM), .q(result_srcW)
+    );
+    pipe_reg #(.WIDTH(1)) mw_valid_reg (
+        .clk(clk), .rst(rst), .en(1'b1), .clr(1'b0),
+        .d(validM), .q(validW)
+    );
 
     // Writeback
     mux4 result_mux (
